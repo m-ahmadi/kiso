@@ -1,0 +1,84 @@
+{"frames": {
+
+"1.png":
+{
+	"frame": {"x":0,"y":0,"w":513,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":513,"h":513},
+	"sourceSize": {"w":513,"h":513}
+},
+"2.png":
+{
+	"frame": {"x":513,"y":0,"w":513,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":513,"h":513},
+	"sourceSize": {"w":513,"h":513}
+},
+"3.png":
+{
+	"frame": {"x":1026,"y":0,"w":512,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":512,"h":513},
+	"sourceSize": {"w":512,"h":513}
+},
+"4.png":
+{
+	"frame": {"x":0,"y":513,"w":513,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":513,"h":513},
+	"sourceSize": {"w":513,"h":513}
+},
+"5.png":
+{
+	"frame": {"x":513,"y":513,"w":513,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":513,"h":513},
+	"sourceSize": {"w":513,"h":513}
+},
+"6.png":
+{
+	"frame": {"x":1026,"y":513,"w":512,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":512,"h":513},
+	"sourceSize": {"w":512,"h":513}
+},
+"7.png":
+{
+	"frame": {"x":0,"y":1026,"w":513,"h":512},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":513,"h":512},
+	"sourceSize": {"w":513,"h":512}
+},
+"8.png":
+{
+	"frame": {"x":513,"y":1026,"w":513,"h":512},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":513,"h":512},
+	"sourceSize": {"w":513,"h":512}
+},
+"9.png":
+{
+	"frame": {"x":1026,"y":1026,"w":512,"h":512},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":512,"h":512},
+	"sourceSize": {"w":512,"h":512}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "atlas.png",
+	"format": "RGBA8888",
+	"size": {"w":1538,"h":1538},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:4ba26e2acf24684ab8898684f626d22f:3fc4a03c5e0c316cf7e498307f686690:cbce6b53f0f49e0bf15173c25c41f876$"
+}
+}

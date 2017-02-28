@@ -1,0 +1,17 @@
+{
+	"presets": [["env", {
+		"targets": {
+			"browsers": [
+				"last 2 Chrome versions",
+				"last 3 firefox versions",
+				"last 3 ie versions",
+				"last 3 opera versions",
+				"last 3 safari versions",
+				"last 3 android versions"
+			]
+		}
+	}]],
+	"ignore": [
+		"@*.js"
+	]
+}

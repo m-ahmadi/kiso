@@ -1,0 +1,13 @@
+85.185.83.35
+
+user:	khpc
+pass:	%r4jR]}HqNCv
+
+putty > change settings > ssh > tunnels
+source port	:1081
+destination	127.0.0.1:8081
+add
+apply
+
+
+http://127.0.0.1:1081/khp/report?num_rows=1&timestamp_start=1487968298000&timestamp_end=1488056858000&table_name=csv_report&sensors=12

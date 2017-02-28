@@ -1,0 +1,84 @@
+{"frames": {
+
+"1.png":
+{
+	"frame": {"x":0,"y":0,"w":282,"h":510},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":282,"h":510},
+	"sourceSize": {"w":282,"h":510}
+},
+"2.png":
+{
+	"frame": {"x":282,"y":0,"w":323,"h":510},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":323,"h":510},
+	"sourceSize": {"w":323,"h":510}
+},
+"3.png":
+{
+	"frame": {"x":605,"y":0,"w":267,"h":513},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":267,"h":513},
+	"sourceSize": {"w":267,"h":513}
+},
+"4.png":
+{
+	"frame": {"x":0,"y":513,"w":509,"h":415},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":509,"h":415},
+	"sourceSize": {"w":509,"h":415}
+},
+"5.png":
+{
+	"frame": {"x":509,"y":513,"w":401,"h":505},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":401,"h":505},
+	"sourceSize": {"w":401,"h":505}
+},
+"6.png":
+{
+	"frame": {"x":0,"y":1018,"w":442,"h":512},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":442,"h":512},
+	"sourceSize": {"w":442,"h":512}
+},
+"7.png":
+{
+	"frame": {"x":442,"y":1018,"w":281,"h":512},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":281,"h":512},
+	"sourceSize": {"w":281,"h":512}
+},
+"8.png":
+{
+	"frame": {"x":723,"y":1018,"w":266,"h":510},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":266,"h":510},
+	"sourceSize": {"w":266,"h":510}
+},
+"9.png":
+{
+	"frame": {"x":0,"y":1530,"w":503,"h":427},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":503,"h":427},
+	"sourceSize": {"w":503,"h":427}
+}},
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "atlas.png",
+	"format": "RGBA8888",
+	"size": {"w":989,"h":1957},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:fd293899b9cf4874c9d33a4ef8352a21:869a2a1763016c3f0262df133b3b3b22:cbce6b53f0f49e0bf15173c25c41f876$"
+}
+}
