@@ -6,7 +6,5 @@ requirejs.config({
 require(['mediator'], function (core) {
 	$(function () {
 		core.init();
-		
-		
 	});
 });

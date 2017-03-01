@@ -5,15 +5,22 @@ define(["util", "positions"], function (u, sensorPos) {
 	const PLANT_PATH = "images/plant.png";
 	const BG_PATH = "images/bg.png";
 	const AJAX_URL = "http://127.0.0.1:1081/khp/report";
-	const REFRESH_TIME = 1000;
+	const REFRESH_TIME = 2000;
+	const FAIL_RETRY_TIME = 200;
+	const NO_ASSETS_RETRY_TIME = 100;
 	
-	// Scope Globals:
-	let g = {
+	const TXT_SCALE = 0.2;
+	const BOX_COLOR = 0x02C4C4;
+	const SCALE_X = 1.2;
+	const SCALE_Y = 1.4;
+	const SPACE_BETWEEN_BOXES = 8;
+	
+	// Scope globals prefixed with g. for better readablity:
+	const g = {
 		renderer: {},
 		stage: {},
 		main: {},
 		textures: {},
-		sensorsList: false,
 		sensors: {},
 		sensorsList: (function(){let a=[];Object.keys(sensorPos).forEach((k,i)=>{a[i]=k;});}()),
 		initialAjaxLoaded: false,
@@ -21,7 +28,7 @@ define(["util", "positions"], function (u, sensorPos) {
 	};
 	
 	function ajax(data) {
-		var d = {};
+		let d = {};
 		
 		d.num_rows        = 1;
 		d.timestamp_start = 1487968298000;
@@ -39,10 +46,8 @@ define(["util", "positions"], function (u, sensorPos) {
 		.done( data.done )
 		.fail( data.fail );
 	}
-	
-	var makeDraggable = (function (el) {
+	let makeDraggable = (function (el) {
 		function start(e) {
-			var arr;
 			e.stopPropagation();
 			this.data = e.data;
 			this.alpha = 0.5;
@@ -51,7 +56,7 @@ define(["util", "positions"], function (u, sensorPos) {
 			this.dragPoint.x -= this.position.x;
 			this.dragPoint.y -= this.position.y;
 			
-			arr = this.parent.children;
+			let arr = this.parent.children;
 			if (arr.length) {
 				arr.splice( arr.indexOf(this), 1 );
 				arr.push(this);
@@ -59,7 +64,7 @@ define(["util", "positions"], function (u, sensorPos) {
 		}
 		function move(e) {
 			if (this.dragging) {
-				var newPosition = this.data.getLocalPosition(this.parent);
+				let newPosition = this.data.getLocalPosition(this.parent);
 				this.position.x = newPosition.x - this.dragPoint.x;
 				this.position.y = newPosition.y - this.dragPoint.y;
 			}
@@ -88,7 +93,6 @@ define(["util", "positions"], function (u, sensorPos) {
 		g.renderer.render(g.stage);
 	}
 	function mousewheel(e) {
-		console.log(e.deltaY);
 		zoom(e.pageX, e.pageY, e.deltaY > 0);
 	}
 	function addEvt() {
@@ -98,7 +102,7 @@ define(["util", "positions"], function (u, sensorPos) {
 		});
 	}
 	function zoom(x, y, zoomIn) {
-		var direction = (zoomIn) ? 1 : -1,
+		let direction = (zoomIn) ? 1 : -1,
 			factor = (1 + direction * 0.1),
 			local_pt = new PIXI.Point(),
 			point = new PIXI.Point(x, y),
@@ -111,19 +115,18 @@ define(["util", "positions"], function (u, sensorPos) {
 		el.pivot = local_pt;
 		el.position = point;
 	}
+	
 	function start() {
-		var tile = new PIXI.extras.TilingSprite.fromImage(BG_PATH, g.renderer.width / g.renderer.resolution * 1000000, g.renderer.height / g.renderer.resolution *1000000);
+		let tile = new PIXI.extras.TilingSprite.fromImage(BG_PATH, g.renderer.width / g.renderer.resolution * 1000000, g.renderer.height / g.renderer.resolution *1000000);
 		tile.position.x = -1000000;
 		tile.position.y = -1000000;
 		g.main.addChild(tile);
 		
 		// var s = new PIXI.Sprite.fromImage( "images/1.png");
-		var i;
-		var s;
-		var x = 0;
-		var y = 0;
-		for (i=0; i<9; i+=1) {
-			s = new PIXI.Sprite( g.textures[i+".png"] );
+		let x = 0,
+			y = 0;
+		for (let i=0; i<9; i+=1) {
+			let s = new PIXI.Sprite( g.textures[i+".png"] );
 			s.scale.set(0.5);
 			s.x = x;
 			s.y = y;
@@ -134,10 +137,9 @@ define(["util", "positions"], function (u, sensorPos) {
 		}
 	}
 	function createPlant() {
-		var c, s;
+		let c = new PIXI.Container();
+		let s = new PIXI.Sprite( g.textures.plant );
 		
-		c = new PIXI.Container();
-		s = new PIXI.Sprite( g.textures.plant );
 		s.scale.set(0.5);
 		c.addChild(s);
 		
@@ -145,153 +147,136 @@ define(["util", "positions"], function (u, sensorPos) {
 		g.stage.position.set(500, 50);
 	}
 	function getLongestText(sensors) {
-		let maxNameLen = 0,
-			maxValLen = 0,
-			keys = Object.keys(sensors);
+		let nameMax = 0,
+			valueMax = 0,
+			keys = Object.keys(sensors),
+			name, value;
 		
 		for (let i=0, len=keys.length; i<len; i+=1) {
 			let sensor = sensors[ keys[i] ],
 				nameLen = sensor.name.length,
 				valueLen = sensor.value.length;
 			
-			if (nameLen > maxNameLen) {
-				maxNameLen = nameLen;
+			if (nameLen > nameMax) {
+				nameMax = nameLen;
+				name = keys[i];
 			}
-			if (valueLen > maxValLen) {
-				maxValLen = valueLen;
+			if (valueLen > valueMax) {
+				valueMax = valueLen;
+				value = keys[i];
 			}
 		}
 		
+		return {name, value};
 	}
-	function createSensors(sensors) {
-		var ts1, ts2,
-			Text = PIXI.Text,
-			Graphics = PIXI.Graphics,
-			TXT_SCALE = 0.2,
-			BOX_COLOR = 0x02C4C4,
-			SCALE_X = 1.2,
-			SCALE_Y = 1.4,
-			SPACE_BETWEEN_BOXES = 8;
-		
-		ts1 = {
+	function createSensor(sensor, k, largestName, largestVal, wR1, wR2, add) {
+		let	Text = PIXI.Text;
+		let Graphics = PIXI.Graphics;
+		let ts1 = {
 			fontFamily: 'Arial',
 			fontSize: '100px',
 			fill: '#002200',
 			stroke: '#4a1850'
 		};
-		ts2 = {
+		let ts2 = {
 			fontFamily: 'Arial',
 			fontSize: '100px',
 			fill: '#F7EDCA',
 			stroke: '#4a1850'
 		};
 		
-		Object.keys(sensors).forEach(function (k) {
-			var sensor = sensors[k],
-				b = new PIXI.Container(),
-				r1, r2,
-				t1, t2;
-			
-			t1 = new Text(""+sensor.name, ts1);
-			t1.scale.set( TXT_SCALE );
-			
-			t2 = new Text(""+sensor.value, ts2);
-			t2.scale.set( TXT_SCALE );
-			
-			r1 = new Graphics();
-			r1.beginFill( BOX_COLOR );
-			r1.drawRect(0, 0, t1.width * SCALE_X, t1.height * SCALE_Y);
-			r1.endFill();
-			
-			r2 = new Graphics();
-			r2.beginFill( BOX_COLOR );
-			r2.drawRect(0, 0, t2.width * SCALE_X*1.3, t2.height * SCALE_Y);
-			r2.endFill();
-			r2.position.x = r1.x + r1.width + SPACE_BETWEEN_BOXES;
-			
-			t1.position.x += (r1.width - t1.width) /2;
-			t1.position.y += (r1.height - t1.height) /2;
-			t2.position.x = r2.x + (r2.width - t2.width) /2;
-			t2.position.y = r2.y + (r2.height - t2.height) /2;
-			
-			b.position.set(sensor.x, sensor.y);
-			
-			b.addChild(r1);
-			b.addChild(r2);
-			b.addChild(t1);
-			b.addChild(t2);
-			
-			
+		let b = new PIXI.Container();
+		
+		let t1 = new Text(""+sensor.name, ts1);
+		t1.scale.set( TXT_SCALE );
+		
+		let t2 = new Text(""+sensor.value, ts2);
+		t2.scale.set( TXT_SCALE );
+		
+		let r1 = new Graphics();
+		r1.beginFill( BOX_COLOR );
+		r1.drawRect(0, 0, wR1 ? wR1 : t1.width * SCALE_X, t1.height * SCALE_Y);
+		r1.endFill();
+		
+		let r2 = new Graphics();
+		r2.beginFill( BOX_COLOR );
+		r2.drawRect(0, 0, wR2 ? wR2 : t2.width * SCALE_X*1.3, t2.height * SCALE_Y);
+		r2.endFill();
+		r2.position.x = r1.x + r1.width + SPACE_BETWEEN_BOXES;
+		
+		t1.position.x += (r1.width - t1.width) /2;
+		t1.position.y += (r1.height - t1.height) /2;
+		t2.position.x = r2.x + (r2.width - t2.width) /2;
+		t2.position.y = r2.y + (r2.height - t2.height) /2;
+		
+		b.position.set(sensor.x, sensor.y);
+		
+		b.addChild(r1);
+		b.addChild(r2);
+		b.addChild(t1);
+		b.addChild(t2);
+		
+		if (add) {
 			g.main.addChild(b);
-			
 			g.sensors[k] = {
 				box: b,
 				nameRectEl: r1,
 				valueTxtEl: t2,
 				valueRectEl: r2
 			};
-		});
+		}
 		
+		
+		return largestName ? r1.width :
+			   largestVal   ? r2.width : undefined;
+	}
+	function createSensors(sensors) {
+		let longest = getLongestText(sensors);
+		let lngName = longest.name;
+		let lngVal = longest.value;
+		
+		let nW = createSensor(sensors[lngName], lngName, true);
+		let vW = createSensor(sensors[lngVal], lngVal, false, true);
+		
+		
+		Object.keys(sensors).forEach(function (k) {
+			let sensor = sensors[k];
+			if (sensor) {
+				createSensor( sensor, k, false, false, nW, vW, true );
+			}
+		});
 		
 	}
 	function updateSensors(arr) {
 		arr.forEach(function (itm, idx) {
-			var sensor = g.sensors[ itm.sensorId ],
-				r1, t2, r2;
-			
-			r2 = sensor.valueRectEl;
-			r1 = sensor.nameRectEl;
-			t2 = sensor.valueTxtEl;
-			
-			r2.destroy(true);
-			
-			t2.setText(""+itm.value);
-			
-			r2 = new PIXI.Graphics();
-			r2.beginFill( 0x02C4C4 );
-			r2.drawRect(0, 0, t2.width * 1.5, t2.height * 1.4);
-			r2.endFill();
-			r2.position.x = r1.x + r1.width + 8;
-			sensor.box.addChild(r2);
-			
-			var arr = t2.parent.children;
-			arr.splice( arr.indexOf(t2), 1 );
-			arr.push(t2);
-			
-			sensor.valueRectEl = r2;
+			let sensor = g.sensors[ itm.sensorId ];
+			sensor.valueTxtEl.setText(""+itm.value);
 		});
 	}
 	function loadData() {
 		ajax({
-			done: function (data) {
-				
+			done (data) {
 				updateSensors( data.rowList );
-				
 				setTimeout(loadData, REFRESH_TIME);
 			},
-			fail: function () {
+			fail () {
 				setTimeout(loadData, 1000);
 			}
 		});
 	}
 	function makeInitAjax() {
-		var list, o;
-		
 		if ( g.assetsLoaded ) {
-			list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-			o = {};
+			let list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+			let o = {};
 			g.sensorsList = list;
 			
 			o.sensorsList = list;
 			o.done = function (data) {
-				var arr;
-				
 				g.initialAjaxLoaded = true;
 				
-				arr = data.rowList;
+				let arr = data.rowList;
 				arr.forEach(function (itm) {
-					
-					var sensor = sensorPos[itm.sensorId];
+					let sensor = sensorPos[itm.sensorId];
 					
 					sensor.name = itm.sensorName + " :";
 					sensor.value = ""+itm.value;
@@ -303,40 +288,40 @@ define(["util", "positions"], function (u, sensorPos) {
 				setTimeout(loadData, REFRESH_TIME);
 			};
 			o.fail = function (data) {
-				setTimeout(makeInitAjax, 1000);
+				setTimeout(makeInitAjax, FAIL_RETRY_TIME);
 			};
 			
 			ajax(o);
 		
 		} else {
-			setTimeout(makeInitAjax, 1000);
+			setTimeout(makeInitAjax, NO_ASSETS_RETRY_TIME);
 		}
 	}
-	function init(div, fn) {
+	function init(el, fn) {
 		makeInitAjax();
-		
-		div = div instanceof jQuery ? div : u.isStr(div) ? $(div) : $(document.body);
-		var stage, main, renderer,
-			renReso,
-			N = 100000;
+		let Container = PIXI.Container;
+		let loader = PIXI.loader;
+		let div = el instanceof jQuery ? el    :
+				  u.isStr(el)          ? $(el) :
+				  $(document.body);
 		
 		PIXI.utils.skipHello();
 		g.renderer = PIXI.autoDetectRenderer(
 			window.innerWidth,
 			window.innerHeight,
 			{
-				backgroundColor: 0x4e342e ,// 0xf5eed8, // 0xAB9988, // 0xAB9999,
+				backgroundColor: 0x4e342e, // 0xf5eed8, // 0xAB9988, // 0xAB9999,
 				antialias: false,
 				transparent: false
 			}
 		);
-		g.stage = new PIXI.Container();
-		g.main = new PIXI.Container();
+		g.stage = new Container();
+		g.main = new Container();
 		
-		renderer = g.renderer;
-		stage = g.stage;
-		main = g.main;
-		renReso = renderer.resolution;
+		let renderer = g.renderer;
+		let stage = g.stage;
+		let main = g.main;
+		let renReso = renderer.resolution;
 		
 		div.append( renderer.view );
 		
@@ -347,12 +332,12 @@ define(["util", "positions"], function (u, sensorPos) {
 		stage.addChild( main );
 		
 		// PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
-		PIXI.loader.add( PLANT_PATH );
-		PIXI.loader.add( ATLAS_PATH );
-		PIXI.loader.load(function () {
+		loader.add( PLANT_PATH );
+		loader.add( ATLAS_PATH );
+		loader.load(function () {
 			g.assetsLoaded = true;
-			g.textures = PIXI.loader.resources[ATLAS_PATH].textures;
-			g.textures["plant"] = PIXI.loader.resources[PLANT_PATH].texture;
+			g.textures = loader.resources[ ATLAS_PATH ].textures;
+			g.textures["plant"] = loader.resources[ PLANT_PATH ].texture;
 			if ( u.isFn(fn) ) {
 				fn();
 			}
@@ -371,9 +356,3 @@ define(["util", "positions"], function (u, sensorPos) {
 	
 	return inst;
 });
-
-/* $.support.cors = true;
-
-	$.ajaxSetup({
-		crossDomain: true
-	}); */
