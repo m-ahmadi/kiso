@@ -6,7 +6,7 @@ define(['page', 'map', 'chart'], function (page, map, chart) {
 	function init() {
 		page.init();
 		map.init();
-		chart.create();
+		chart.init();
 	}
 
 	inst.init = init;

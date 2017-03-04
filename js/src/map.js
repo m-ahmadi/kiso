@@ -16,7 +16,7 @@ define(["util", "positions"], function (u, sensorPos) {
 	const SPACE_BETWEEN_BOXES = 8;
 	
 	// Scope globals prefixed with g. for better readablity:
-	const g = {
+	let g = {
 		renderer: {},
 		stage: {},
 		main: {},

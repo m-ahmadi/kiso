@@ -9,6 +9,9 @@ module.exports = function (grunt) {
 		watch: {
 			scripts: {
 				files: [
+					"!**/node_modules/**",
+					"**/*.html",
+					"css/**/*.css",
 					"js/dist/**/*.js",
 					"gruntfile.js"
 				],
@@ -21,7 +24,9 @@ module.exports = function (grunt) {
 			livereload: {
 				options: { livereload: true },
 				files: [
-					"**/*.htm",
+					"!**/node_modules/**",
+					"**/*.html",
+					"css/**/*.css",
 					"js/dist/**/*.js"
 				]
 			}

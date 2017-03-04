@@ -7,12 +7,21 @@ body {
 
 #contents {
 	width: 100%;
-}
-
+} 
 .chart-container {
 	margin: 10px;
+	padding: 10px; 
 	position: absolute;
 	background: white;
 	z-index: 2;
-	width: 30%;
+}
+@media screen and (min-width: 1280px) {
+	.chart-container {
+		width: 30%;
+	}
+}
+@media screen and (max-width: 1024px) {
+	.chart-container {
+		width: 600px;
+	}
 }
