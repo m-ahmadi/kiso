@@ -57,7 +57,7 @@ define([], function () {
 		});
 		
 		
-		createChart();
+		
 	}
 	function getLabels(list) {
 		var labelArr = [];
@@ -121,6 +121,7 @@ define([], function () {
 	}
 	function init() {
 		ajax();
+		createChart();
 	}
 	
 	inst.init = init;

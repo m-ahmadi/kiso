@@ -49,8 +49,6 @@ define([], function () {
 				console.log(o);
 			} else if (o.sensorId === PRILE) {} else if (o.sensorId === AMONIA) {} else if (o.sensorId === MELAMIN) {}
 		});
-
-		createChart();
 	}
 	function getLabels(list) {
 		var labelArr = [];
@@ -114,6 +112,7 @@ define([], function () {
 	}
 	function init() {
 		ajax();
+		createChart();
 	}
 
 	inst.init = init;
