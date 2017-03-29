@@ -3,7 +3,8 @@
 define([], function () {
 	var inst = {};
 
-	var AJAX_URL = "http://127.0.0.1:1081/khp/report";
+	var HOST = determineHost();
+	var AJAX_URL = "http://" + HOST + "/khp/report"; // "http://127.0.0.1:1081/khp/report";
 	var UREA = 12;
 	var PRILE = 13;
 	var AMONIA = 14;
@@ -19,6 +20,18 @@ define([], function () {
 		// "rgba(75, 192, 192, 0.4)"
 	};
 
+	function determineHost() {
+		var host = window.location.host;
+		var res = void 0;
+		if (host) {
+			if (host === "localhost" || host === "127.0.0.1") {
+				res = host + ":1081";
+			} else if (host === "80.85.82.83" || host === "10.10.200.64") {
+				res = host + ":8081";
+			}
+		}
+		return res;
+	}
 	function ajax(callback) {
 		var d = {};
 		var t = new Date();

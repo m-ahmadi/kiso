@@ -4,8 +4,9 @@ define(["util", "positions"], function (u, sensorPos) {
 	const ATLAS_PATH = "images/atlas.json";
 	const PLANT_PATH = "images/plant.png";
 	const BG_PATH = "images/bg.png";
-	const AJAX_URL = "http://127.0.0.1:1081/khp/report";
-	const REFRESH_TIME = 2000;
+	const HOST = determineHost();
+	const AJAX_URL = `http://${HOST}/khp/report`; // "http://127.0.0.1:1081/khp/report"
+	const REFRESH_TIME = 60000;
 	const FAIL_RETRY_TIME = 200;
 	const NO_ASSETS_RETRY_TIME = 100;
 	
@@ -27,6 +28,18 @@ define(["util", "positions"], function (u, sensorPos) {
 		assetsLoaded: false
 	};
 	
+	function determineHost() {
+		let host = window.location.host;
+		let res;
+		if (host) {	
+			if (host === "localhost" || host === "127.0.0.1") {
+				res = `${host}:1081`;
+			} else if (host === "80.85.82.83" || host === "10.10.200.64") {
+				res = `${host}:8081`;
+			}
+		}
+		return res;
+	}
 	function ajax(data) {
 		let d = {};
 		
@@ -175,13 +188,15 @@ define(["util", "positions"], function (u, sensorPos) {
 		let ts1 = {
 			fontFamily: 'Arial',
 			fontSize: '100px',
-			fill: '#002200',
+			fontWeight : 'bold',
+			fill: '#002200', // 002200
 			stroke: '#4a1850'
 		};
 		let ts2 = {
 			fontFamily: 'Arial',
 			fontSize: '100px',
-			fill: '#F7EDCA',
+			fontWeight : 'bold',
+			fill: '#002200', // F7EDCA
 			stroke: '#4a1850'
 		};
 		

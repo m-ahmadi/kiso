@@ -6,8 +6,9 @@ define(["util", "positions"], function (u, sensorPos) {
 	var ATLAS_PATH = "images/atlas.json";
 	var PLANT_PATH = "images/plant.png";
 	var BG_PATH = "images/bg.png";
-	var AJAX_URL = "http://127.0.0.1:1081/khp/report";
-	var REFRESH_TIME = 2000;
+	var HOST = determineHost();
+	var AJAX_URL = "http://" + HOST + "/khp/report"; // "http://127.0.0.1:1081/khp/report"
+	var REFRESH_TIME = 60000;
 	var FAIL_RETRY_TIME = 200;
 	var NO_ASSETS_RETRY_TIME = 100;
 
@@ -33,6 +34,18 @@ define(["util", "positions"], function (u, sensorPos) {
 		assetsLoaded: false
 	};
 
+	function determineHost() {
+		var host = window.location.host;
+		var res = void 0;
+		if (host) {
+			if (host === "localhost" || host === "127.0.0.1") {
+				res = host + ":1081";
+			} else if (host === "80.85.82.83" || host === "10.10.200.64") {
+				res = host + ":8081";
+			}
+		}
+		return res;
+	}
 	function ajax(data) {
 		var d = {};
 
@@ -172,13 +185,15 @@ define(["util", "positions"], function (u, sensorPos) {
 		var ts1 = {
 			fontFamily: 'Arial',
 			fontSize: '100px',
-			fill: '#002200',
+			fontWeight: 'bold',
+			fill: '#002200', // 002200
 			stroke: '#4a1850'
 		};
 		var ts2 = {
 			fontFamily: 'Arial',
 			fontSize: '100px',
-			fill: '#F7EDCA',
+			fontWeight: 'bold',
+			fill: '#002200', // F7EDCA
 			stroke: '#4a1850'
 		};
 

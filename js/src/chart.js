@@ -1,7 +1,8 @@
 define([], function () {
 	let inst = {};
 	
-	const AJAX_URL = "http://127.0.0.1:1081/khp/report";
+	const HOST = determineHost();
+	const AJAX_URL = `http://${HOST}/khp/report`; // "http://127.0.0.1:1081/khp/report";
 	const UREA = 12;
 	const PRILE = 13;
 	const AMONIA = 14;
@@ -17,6 +18,18 @@ define([], function () {
 		// "rgba(75, 192, 192, 0.4)"
 	};
 	
+	function determineHost() {
+		let host = window.location.host;
+		let res;
+		if (host) {	
+			if (host === "localhost" || host === "127.0.0.1") {
+				res = `${host}:1081`;
+			} else if (host === "80.85.82.83" || host === "10.10.200.64") {
+				res = `${host}:8081`;
+			}
+		}
+		return res;
+	}
 	function ajax(callback) {
 		let d = {};
 		let t = new Date();
