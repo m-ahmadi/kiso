@@ -1,0 +1,28 @@
+{
+  "name": "MyApp",
+  "authors": [
+    "mohammad-ahmadi <mohammad.ahmad1989@yahoo.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "src/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "requirejs": "latest",
+    "jquery": "^3.2.1",
+    "handlebars": "latest",
+    "pubsub-ma": "latest",
+    "util-ma": "latest",
+    "uikit": "^3.0.0",
+    "chart.js": "chartjs#^2.6.0",
+    "jquery-mousewheel": "^3.1.13"
+  }
+}

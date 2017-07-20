@@ -1,8 +1,6 @@
 {
-  "name": "khpc",
-  "version": "1.0.0",
-  "description": "",
-  "main": "",
+  "name": "MyApp",
+  "version": "0.0.1",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,12 +8,15 @@
   "author": "Mohammad Ahmadi",
   "license": "MIT",
   "devDependencies": {
-    "babel-cli": "^6.23.0",
-    "babel-preset-env": "^1.1.10",
-    "babel-preset-es2015": "^6.22.0",
-    "grunt": "^1.0.1",
-    "grunt-contrib-concat": "^1.0.1",
-    "grunt-contrib-watch": "^1.0.0",
-    "grunt-sass": "^2.0.0"
+    "babel-cli": "latest",
+    "babel-preset-env": "latest",
+    "gulp": "latest",
+    "gulp-cli": "latest",
+    "gulp-livereload": "latest",
+    "gulp-shell": "latest",
+    "handlebars": "latest",
+    "htmlbilder": "latest",
+    "requirejs": "latest",
+    "node-sass": "latest"
   }
 }
