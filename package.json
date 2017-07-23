@@ -18,5 +18,8 @@
     "htmlbilder": "latest",
     "requirejs": "latest",
     "node-sass": "latest"
+  },
+  "dependencies": {
+    "pixi.js": "^4.5.3"
   }
 }

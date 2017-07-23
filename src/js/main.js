@@ -1,5 +1,5 @@
 requirejs.config({
-	baseUrl: "js/dist"
+	baseUrl: "js/"
 	
 });
 

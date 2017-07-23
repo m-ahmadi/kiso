@@ -1,4 +1,4 @@
-define(["util", "positions"], function (u, sensorPos) {
+define(["positions"], function (sensorPos) {
 	let inst = {};
 	
 	const ATLAS_PATH = "images/atlas.json";
