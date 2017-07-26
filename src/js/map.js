@@ -3,9 +3,11 @@ define(["positions"], function (sensorPos) {
 	
 	const ATLAS_PATH = "images/atlas.json";
 	const PLANT_PATH = "images/plant.png";
+	const TABLE_PATH = "images/table.png";
 	const BG_PATH = "images/bg.png";
 	const HOST = determineHost();
 	const AJAX_URL = `http://${HOST}/khp/report`; // "http://127.0.0.1:1081/khp/report"
+	const AJAX_URL_2 = `http://${HOST}/khp/dashboard`; // http://127.0.0.1:1081/khp/dashboard
 	const REFRESH_TIME = 60000;
 	const FAIL_RETRY_TIME = 200;
 	const NO_ASSETS_RETRY_TIME = 100;
@@ -63,7 +65,7 @@ define(["positions"], function (sensorPos) {
 		function start(e) {
 			e.stopPropagation();
 			this.data = e.data;
-			this.alpha = 0.5;
+			this.alpha = 0.9;
 			this.dragging = true;
 			this.dragPoint = e.data.getLocalPosition(this.parent);
 			this.dragPoint.x -= this.position.x;
@@ -165,16 +167,19 @@ define(["positions"], function (sensorPos) {
 		
 		// PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 		loader.add( PLANT_PATH );
+		loader.add( TABLE_PATH );
 		loader.add( ATLAS_PATH );
 		loader.load(function () {
 			g.assetsLoaded = true;
 			g.textures = loader.resources[ ATLAS_PATH ].textures;
 			g.textures["plant"] = loader.resources[ PLANT_PATH ].texture;
+			g.textures["table"] = loader.resources[ TABLE_PATH ].texture;
 			if ( u.isFn(fn) ) {
 				fn();
 			}
 		//	start();
 			createPlant();
+			createTable();
 		});
 		requestAnimationFrame( animate );
 		renderer.render( stage );
@@ -216,11 +221,11 @@ define(["positions"], function (sensorPos) {
 	}
 	function loadData() {
 		ajax({
-			done (data) {
+			done(data) {
 				updateSensors( data.rowList );
 				setTimeout(loadData, REFRESH_TIME);
 			},
-			fail () {
+			fail() {
 				setTimeout(loadData, 1000);
 			}
 		});
@@ -233,7 +238,8 @@ define(["positions"], function (sensorPos) {
 		c.addChild(s);
 		
 		g.main.addChild(c);
-		g.stage.position.set(500, 50);
+		g.stage.scale.set(0.7);
+		g.stage.position.set(700, 15);
 	}
 	function getLongestText(sensors) {
 		let nameMax = 0,
@@ -330,7 +336,7 @@ define(["positions"], function (sensorPos) {
 		let vW = createSensor(sensors[lngVal], lngVal, false, true);
 		
 		
-		Object.keys(sensors).forEach(function (k) {
+		Object.keys(sensors).forEach(k => {
 			let sensor = sensors[k];
 			if (sensor) {
 				createSensor( sensor, k, false, false, nW, vW, true );
@@ -339,12 +345,187 @@ define(["positions"], function (sensorPos) {
 		
 	}
 	function updateSensors(arr) {
-		arr.forEach(function (itm, idx) {
+		arr.forEach((itm, idx) => {
 			let sensor = g.sensors[ itm.sensorId ];
 			sensor.valueTxtEl.setText(""+itm.value);
 		});
 	}
 	
+	
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+// table stuff
+	/* var x = [
+		[0, 1, 2, 3, 4, 5, 6, 7],
+		[0, 1, 2, 3, 4, 5, 6, 7],
+		[0, 1, 2, 3, 4, 5, 6, 7],
+		[0, 1, 2, 3],
+		[0]
+	]; */
+	
+	let texts;
+	function mkTxt(x, y, fontSize, val) {
+		let c = {
+			fontFamily: "Arial",
+			fontSize: fontSize || "100px",
+			fill: "#002200", // F7EDCA
+			stroke: "#4a1850"
+		};
+		let t = new PIXI.Text(""+(val || 111), c);
+		t.scale.set(0.2);
+		t.x = x;
+		t.y = y;
+		return t;
+	}
+	function loadTableData() {
+		$.ajax({
+			url: AJAX_URL_2,
+			method: "GET"
+		})
+		.done(data => {
+			updateTable( convertData(data) );
+			setTimeout(loadTableData, REFRESH_TIME);
+		})
+		.fail(() => {
+			setTimeout(loadTableData, 1000);
+		});
+	}
+	function createTable() {
+		let s = new PIXI.Sprite( g.textures.table );
+		
+		s.position.set(200, 920);
+		s.scale.set(0.5);
+		g.main.addChild(s);
+		
+		texts = makeTexts();
+		
+		texts.forEach(a => {
+			a.forEach( o => g.main.addChild(o) );
+		});
+		
+		loadTableData();
+	}
+	function updateTable(data) {
+		let len = data.length;
+		for (let i=0; i<len; i+=1) {
+			let d = data[i];
+			let len = d.length;
+			let t = texts[i];
+			for (let j=0; j<len; j+=1) {
+				t[j].setText( d[j] );
+			}
+		}
+	}
+	function makeTexts() {
+		let a, b, c, d, date;
+		const f1 = 135;
+		const f2 = 118;
+		const lf = f1 + 730;
+		
+		const X1 = 1130;
+		const X2 = 1000;
+		const X3 = 875;
+		const X4 = 736;
+		const X5 = 620;
+		const X6 = 540;
+		const X7 = 385;
+		const X8 = 250;
+		
+		const Y1 = 1140;
+		const Y2 = 1180;
+		const Y3 = 1222;
+		const Y4 = 1274;
+		a = [
+			mkTxt(X1, Y1),
+			mkTxt(X2, Y1),
+			mkTxt(X3, Y1),
+			mkTxt(X4, Y1),
+			mkTxt(X5, Y1),
+			mkTxt(X6, Y1),
+			mkTxt(X7, Y1),
+			mkTxt(X8, Y1),
+		];
+		b = [
+			mkTxt(X1, Y2),
+			mkTxt(X2, Y2),
+			mkTxt(X3, Y2),
+			mkTxt(X4, Y2),
+			mkTxt(X5, Y2),
+			mkTxt(X6, Y2),
+			mkTxt(X7, Y2),
+			mkTxt(X8, Y2),
+		];
+		c = [
+			mkTxt(X1, Y3),
+			mkTxt(X2, Y3),
+			mkTxt(X3, Y3),
+			mkTxt(X4, Y3),
+			mkTxt(X5, Y3),
+			mkTxt(X6, Y3),
+			mkTxt(X7, Y3),
+			mkTxt(X8, Y3),
+		];
+		d = [
+			mkTxt(X1, Y4),
+			mkTxt(X2, Y4),
+			mkTxt(X3, Y4)
+		];
+		date = [
+			mkTxt(1200, 986, "90px")
+		];
+		return [a, b, c, d, date];
+	}
+	function convertData(data) {
+		let res = [];
+		let a, b, c, d, date;
+		
+		let lines = data.lines;
+		let { amooniak, oore, melamin } = lines;
+		let total = data.total;
+		
+		let f = u.toDecimalPlace;
+		a = [
+			f(amooniak.toolid, 2),
+			f(amooniak.darsad_nesbat_be_tarahi, 2),
+			f(amooniak.darsad_toolid_nesbat_be_kol_boodje, 2),
+			amooniak.moojodi_jari.mojodi_mojtama,
+			amooniak.moojodi_jari.mojodi_zakhire,
+			amooniak.moojodi_jari.mojodi_swap,
+			amooniak.moojodi_jari.mojodi_afghanestan,
+			amooniak.majmoo_mojodi
+		];
+		b = [
+			f(oore.toolid, 2),
+			f(oore.darsad_nesbat_be_tarahi, 2),
+			f(oore.darsad_toolid_nesbat_be_kol_boodje, 2),
+			oore.moojodi_jari.mojodi_mojtama,
+			oore.moojodi_jari.mojodi_zakhire,
+			oore.moojodi_jari.mojodi_swap,
+			oore.moojodi_jari.mojodi_afghanestan,
+			oore.majmoo_mojodi
+		];
+		c = [
+			f(melamin.toolid, 2),
+			f(melamin.darsad_nesbat_be_tarahi, 2),
+			f(melamin.darsad_toolid_nesbat_be_kol_boodje, 2),
+			melamin.moojodi_jari.mojodi_mojtama,
+			melamin.moojodi_jari.mojodi_zakhire,
+			melamin.moojodi_jari.mojodi_swap,
+			melamin.moojodi_jari.mojodi_afghanestan,
+			melamin.majmoo_mojodi
+		];
+		d = [
+			f(total.toolid, 2),
+			f(total.darsad_nesbat_be_tarahi, 2),
+			f(total.darsad_toolid_nesbat_be_kol_boodje, 2)
+		];
+		let x = data.date;
+		date = [
+			x.slice(0, 4) +"/"+ x.slice(4, 6) +"/"+ x.slice(-2)
+		];
+		res = [a, b, c, d, date];
+		return res;
+	}
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	
 	function start() {
 		let tile = new PIXI.extras.TilingSprite.fromImage(BG_PATH, g.renderer.width / g.renderer.resolution * 1000000, g.renderer.height / g.renderer.resolution *1000000);
@@ -373,3 +554,56 @@ define(["positions"], function (sensorPos) {
 	
 	return inst;
 });
+
+
+/* function makeTexts() {
+	let a, b, c, d, date;
+	const f1 = 135;
+	const f2 = 118;
+	const lf = f1 + 740;
+	const X = 1155;
+	const X2 = 880;
+	const Y1 = 1135;
+	const Y2 = 1177;
+	const Y3 = 1219;
+	const Y4 = 1272;
+	a = [
+		mkTxt(X,           Y1),
+		mkTxt(X  - f1,     Y1),
+		mkTxt(X  - (f1*2), Y1),
+		mkTxt(X2 - f2,     Y1),
+		mkTxt(X2 - (f2*2), Y1),
+		mkTxt(X2 - (f2*3), Y1),
+		mkTxt(X2 - (f2*4), Y1),
+		mkTxt(X  - lf,     Y1)
+	];
+	b = [
+		mkTxt(X,           Y2),
+		mkTxt(X  - f1,     Y2),
+		mkTxt(X  - (f1*2), Y2),
+		mkTxt(X2 - f2,     Y2),
+		mkTxt(X2 - (f2*2), Y2),
+		mkTxt(X2 - (f2*3), Y2),
+		mkTxt(X2 - (f2*4), Y2),
+		mkTxt(X  - lf,     Y2)
+	];
+	c = [
+		mkTxt(X,           Y3),
+		mkTxt(X  - f1,     Y3),
+		mkTxt(X  - (f1*2), Y3),
+		mkTxt(X2 - f2,     Y3),
+		mkTxt(X2 - (f2*2), Y3),
+		mkTxt(X2 - (f2*3), Y3),
+		mkTxt(X2 - (f2*4), Y3),
+		mkTxt(X  - lf,     Y3)
+	];
+	d = [
+		mkTxt(X,           Y4),
+		mkTxt(X  - f1,     Y4),
+		mkTxt(X  - (f1*2), Y4)
+	];
+	date = [
+		mkTxt(1200, 986, "90px")
+	];
+	return [a, b, c, d, date];
+} */
