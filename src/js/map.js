@@ -23,7 +23,7 @@ define(["positions"], function (sensorPos) {
 		main: {},
 		textures: {},
 		sensors: {},
-		sensorsList: (function(){let a=[];Object.keys(sensorPos).forEach((k,i)=>{a[i]=k;});}()),
+		sensorsList: Object.keys(sensorPos),
 		initialAjaxLoaded: false,
 		assetsLoaded: false
 	};
@@ -129,25 +129,101 @@ define(["positions"], function (sensorPos) {
 		el.position = point;
 	}
 	
-	function start() {
-		let tile = new PIXI.extras.TilingSprite.fromImage(BG_PATH, g.renderer.width / g.renderer.resolution * 1000000, g.renderer.height / g.renderer.resolution *1000000);
-		tile.position.x = -1000000;
-		tile.position.y = -1000000;
-		g.main.addChild(tile);
+	function init(el, fn) {
+		makeInitAjax();
+		let Container = PIXI.Container;
+		let loader = PIXI.loader;
+		let div = el instanceof jQuery ? el    :
+				  u.isStr(el)          ? $(el) :
+				  $(document.body);
 		
-		// var s = new PIXI.Sprite.fromImage( "images/1.png");
-		let x = 0,
-			y = 0;
-		for (let i=0; i<9; i+=1) {
-			let s = new PIXI.Sprite( g.textures[i+".png"] );
-			s.scale.set(0.5);
-			s.x = x;
-			s.y = y;
-			x+=50;
-			y+=50;
-			makeDraggable(s);
-			g.main.addChild(s);
+		PIXI.utils.skipHello();
+		g.renderer = PIXI.autoDetectRenderer(
+			window.innerWidth,
+			window.innerHeight,
+			{
+				backgroundColor: 0xffffff, // 0x4e342e, // 0xf5eed8, // 0xAB9988, // 0xAB9999,
+				antialias: false,
+				transparent: false
+			}
+		);
+		g.stage = new Container();
+		g.main = new Container();
+		
+		let renderer = g.renderer;
+		let stage = g.stage;
+		let main = g.main;
+		let renReso = renderer.resolution;
+		
+		div.append( renderer.view );
+		
+		main.hitArea = new PIXI.Rectangle( -1000000, -1000000, renderer.width / renReso * 1000000, renderer.height / renReso *1000000 );
+	//	stage.interactive = true;
+		makeDraggable(main);
+		addEvt();
+		stage.addChild( main );
+		
+		// PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
+		loader.add( PLANT_PATH );
+		loader.add( ATLAS_PATH );
+		loader.load(function () {
+			g.assetsLoaded = true;
+			g.textures = loader.resources[ ATLAS_PATH ].textures;
+			g.textures["plant"] = loader.resources[ PLANT_PATH ].texture;
+			if ( u.isFn(fn) ) {
+				fn();
+			}
+		//	start();
+			createPlant();
+		});
+		requestAnimationFrame( animate );
+		renderer.render( stage );
+		
+		
+	}
+	function makeInitAjax() {
+		if ( g.assetsLoaded ) {
+			let list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+			let o = {};
+			g.sensorsList = list;
+			
+			o.sensorsList = list;
+			o.done = function (data) {
+				g.initialAjaxLoaded = true;
+				
+				let arr = data.rowList;
+				arr.forEach(function (itm) {
+					let sensor = sensorPos[itm.sensorId];
+					
+					sensor.name = itm.sensorName + " :";
+					sensor.value = ""+itm.value;
+					
+				});
+				
+				createSensors(sensorPos);
+				
+				setTimeout(loadData, REFRESH_TIME);
+			};
+			o.fail = function (data) {
+				setTimeout(makeInitAjax, FAIL_RETRY_TIME);
+			};
+			
+			ajax(o);
+		
+		} else {
+			setTimeout(makeInitAjax, NO_ASSETS_RETRY_TIME);
 		}
+	}
+	function loadData() {
+		ajax({
+			done (data) {
+				updateSensors( data.rowList );
+				setTimeout(loadData, REFRESH_TIME);
+			},
+			fail () {
+				setTimeout(loadData, 1000);
+			}
+		});
 	}
 	function createPlant() {
 		let c = new PIXI.Container();
@@ -268,101 +344,27 @@ define(["positions"], function (sensorPos) {
 			sensor.valueTxtEl.setText(""+itm.value);
 		});
 	}
-	function loadData() {
-		ajax({
-			done (data) {
-				updateSensors( data.rowList );
-				setTimeout(loadData, REFRESH_TIME);
-			},
-			fail () {
-				setTimeout(loadData, 1000);
-			}
-		});
-	}
-	function makeInitAjax() {
-		if ( g.assetsLoaded ) {
-			let list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-			let o = {};
-			g.sensorsList = list;
-			
-			o.sensorsList = list;
-			o.done = function (data) {
-				g.initialAjaxLoaded = true;
-				
-				let arr = data.rowList;
-				arr.forEach(function (itm) {
-					let sensor = sensorPos[itm.sensorId];
-					
-					sensor.name = itm.sensorName + " :";
-					sensor.value = ""+itm.value;
-					
-				});
-				
-				createSensors(sensorPos);
-				
-				setTimeout(loadData, REFRESH_TIME);
-			};
-			o.fail = function (data) {
-				setTimeout(makeInitAjax, FAIL_RETRY_TIME);
-			};
-			
-			ajax(o);
+	
+	
+	function start() {
+		let tile = new PIXI.extras.TilingSprite.fromImage(BG_PATH, g.renderer.width / g.renderer.resolution * 1000000, g.renderer.height / g.renderer.resolution *1000000);
+		tile.position.x = -1000000;
+		tile.position.y = -1000000;
+		g.main.addChild(tile);
 		
-		} else {
-			setTimeout(makeInitAjax, NO_ASSETS_RETRY_TIME);
+		// var s = new PIXI.Sprite.fromImage( "images/1.png");
+		let x = 0,
+			y = 0;
+		for (let i=0; i<9; i+=1) {
+			let s = new PIXI.Sprite( g.textures[i+".png"] );
+			s.scale.set(0.5);
+			s.x = x;
+			s.y = y;
+			x+=50;
+			y+=50;
+			makeDraggable(s);
+			g.main.addChild(s);
 		}
-	}
-	function init(el, fn) {
-		makeInitAjax();
-		let Container = PIXI.Container;
-		let loader = PIXI.loader;
-		let div = el instanceof jQuery ? el    :
-				  u.isStr(el)          ? $(el) :
-				  $(document.body);
-		
-		PIXI.utils.skipHello();
-		g.renderer = PIXI.autoDetectRenderer(
-			window.innerWidth,
-			window.innerHeight,
-			{
-				backgroundColor: 0x4e342e, // 0xf5eed8, // 0xAB9988, // 0xAB9999,
-				antialias: false,
-				transparent: false
-			}
-		);
-		g.stage = new Container();
-		g.main = new Container();
-		
-		let renderer = g.renderer;
-		let stage = g.stage;
-		let main = g.main;
-		let renReso = renderer.resolution;
-		
-		div.append( renderer.view );
-		
-		main.hitArea = new PIXI.Rectangle( -1000000, -1000000, renderer.width / renReso * 1000000, renderer.height / renReso *1000000 );
-	//	stage.interactive = true;
-		makeDraggable(main);
-		addEvt();
-		stage.addChild( main );
-		
-		// PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
-		loader.add( PLANT_PATH );
-		loader.add( ATLAS_PATH );
-		loader.load(function () {
-			g.assetsLoaded = true;
-			g.textures = loader.resources[ ATLAS_PATH ].textures;
-			g.textures["plant"] = loader.resources[ PLANT_PATH ].texture;
-			if ( u.isFn(fn) ) {
-				fn();
-			}
-		//	start();
-			createPlant();
-		});
-		requestAnimationFrame( animate );
-		renderer.render( stage );
-		
-		
 	}
 	
 	inst.init = init;

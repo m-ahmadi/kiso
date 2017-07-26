@@ -13,7 +13,7 @@ define([], function () {
 		labels: [],
 		months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
 		chart: {},
-		chartData: {}
+		chartData: {};
 		
 		// "rgba(75, 192, 192, 0.4)"
 	};

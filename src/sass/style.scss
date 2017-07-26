@@ -7,8 +7,9 @@ body {
 
 #contents {
 	width: 100%;
+	position: relative;
 } 
-.chart-container {
+#chart-container {
 	margin: 10px;
 	padding: 10px; 
 	position: absolute;
@@ -16,12 +17,19 @@ body {
 	z-index: 2;
 }
 @media screen and (min-width: 1280px) {
-	.chart-container {
+	#chart-container {
 		width: 30%;
 	}
 }
 @media screen and (max-width: 1024px) {
-	.chart-container {
+	#chart-container {
 		width: 600px;
 	}
+}
+
+#table-container {
+	position: absolute;
+	top: 700px;
+    left: 1200px;
+    background: white;
 }
