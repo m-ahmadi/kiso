@@ -1,1 +1,1 @@
-define(() => 'static/');
+define(() => '');
