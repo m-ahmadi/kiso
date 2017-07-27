@@ -17,13 +17,13 @@ define([], function () {
 	};
 	
 	function determineHost() {
-		let host = window.location.host;
+		let hName = window.location.hostname;
 		let res;
-		if (host) {	
-			if (host === "localhost" || host === "127.0.0.1") {
-				res = `${host}:1081`;
-			} else if (host === "80.85.82.83" || host === "10.10.200.64") {
-				res = `${host}:8081`;
+		if (hName) {	
+			if (hName === "localhost" || hName === "127.0.0.1") {
+				res = `${hName}:1081`;
+			} else if (host === "80.85.82.83" || hName === "10.10.200.64") {
+				res = `${hName}:8081`;
 			}
 		}
 		return res;

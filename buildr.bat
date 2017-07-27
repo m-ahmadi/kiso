@@ -4,7 +4,7 @@ set INP=./src
 set OUT=./release/static
 set MKO=release\static
 set HOUT=./release/
-set ROOT=/static/
+set ROOT=static/
 set FL=app.js
 
 cmd /c rm -rf %OUT%
