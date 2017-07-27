@@ -1,10 +1,10 @@
-define(["positions"], function (sensorPos) {
+define(["core/config", "positions"], function (conf, sensorPos) {
 	let inst = {};
 	
-	const ATLAS_PATH = "images/atlas.json";
-	const PLANT_PATH = "images/plant.png";
-	const TABLE_PATH = "images/table.png";
-	const BG_PATH = "images/bg.png";
+	const ATLAS_PATH = conf.ROOT+ "images/atlas.json";
+	const PLANT_PATH = conf.ROOT+ "images/plant.png";
+	const TABLE_PATH = conf.ROOT+ "images/table.png";
+	const BG_PATH = conf.ROOT+ "images/bg.png";
 	const HOST = determineHost();
 	const AJAX_URL = `http://${HOST}/khp/report`; // "http://127.0.0.1:1081/khp/report"
 	const AJAX_URL_2 = `http://${HOST}/khp/dashboard`; // http://127.0.0.1:1081/khp/dashboard
