@@ -42,12 +42,18 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 		}
 		return res;
 	}
+	function getTimestamp(now) {
+		let ts = Math.floor( Date.now() );
+		return now
+			? ts
+			: ts - (96 * 3600);
+	}
 	function ajax(data) {
 		let d = {};
 		
 		d.num_rows        = 1;
-		d.timestamp_start = 1487968298000;
-		d.timestamp_end   = 1488056858000;
+		d.timestamp_start = getTimestamp();
+		d.timestamp_end   = getTimestamp(true);
 		d.table_name      = "csv_report";
 		d.sensors = data.sensorsList ? data.sensorsList.join(",") : g.sensorsList.join(",")
 		
@@ -188,7 +194,7 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 	}
 	function makeInitAjax() {
 		if ( g.assetsLoaded ) {
-			let list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+			let list = [1228, 1633, 1630, 1602, 1530, 1783, 1465, 748, 1258, 533, 1228, 12, 92, 211, 49, 312, 533, 474];
 			let o = {};
 			g.sensorsList = list;
 			
@@ -204,7 +210,6 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 					sensor.value = ""+itm.value;
 					
 				});
-				
 				createSensors(sensorPos);
 				
 				setTimeout(loadData, REFRESH_TIME);
