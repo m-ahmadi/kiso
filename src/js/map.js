@@ -25,7 +25,6 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 		main: {},
 		textures: {},
 		sensors: {},
-		sensorsList: Object.keys(sensorPos),
 		initialAjaxLoaded: false,
 		assetsLoaded: false
 	};
@@ -48,25 +47,7 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 			? ts
 			: ts - (96 * 3600);
 	}
-	function ajax(data) {
-		let d = {};
-		
-		d.num_rows        = 1;
-		d.timestamp_start = getTimestamp();
-		d.timestamp_end   = getTimestamp(true);
-		d.table_name      = "csv_report";
-		d.sensors = data.sensorsList ? data.sensorsList.join(",") : g.sensorsList.join(",")
-		
-		$.ajax({
-			url: AJAX_URL,
-			type: "GET",
-			dataType: "json",
-			data: d,
-			beforeSend: data.beforeSend
-		})
-		.done( data.done )
-		.fail( data.fail );
-	}
+	
 	let makeDraggable = (function (el) {
 		function start(e) {
 			e.stopPropagation();
@@ -138,7 +119,8 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 	}
 	
 	function init(el, fn) {
-		makeInitAjax();
+	//	makeInitAjax();
+		createSensors(sensorPos);
 		let Container = PIXI.Container;
 		let loader = PIXI.loader;
 		let div = el instanceof jQuery ? el    :
@@ -192,38 +174,7 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 		
 		
 	}
-	function makeInitAjax() {
-		if ( g.assetsLoaded ) {
-			let list = [1228, 1633, 1630, 1602, 1530, 1783, 1465, 748, 1258, 533, 1228, 12, 92, 211, 49, 312, 533, 474];
-			let o = {};
-			g.sensorsList = list;
-			
-			o.sensorsList = list;
-			o.done = function (data) {
-				g.initialAjaxLoaded = true;
-				
-				let arr = data.rowList;
-				arr.forEach(function (itm) {
-					let sensor = sensorPos[itm.sensorId];
-					
-					sensor.name = itm.sensorName + " :";
-					sensor.value = ""+itm.value;
-					
-				});
-				createSensors(sensorPos);
-				
-				setTimeout(loadData, REFRESH_TIME);
-			};
-			o.fail = function (data) {
-				setTimeout(makeInitAjax, FAIL_RETRY_TIME);
-			};
-			
-			ajax(o);
-		
-		} else {
-			setTimeout(makeInitAjax, NO_ASSETS_RETRY_TIME);
-		}
-	}
+	
 	function loadData() {
 		ajax({
 			done(data) {
@@ -247,26 +198,25 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 		g.stage.position.set(700, 15);
 	}
 	function getLongestText(sensors) {
-		let nameMax = 0,
-			valueMax = 0,
-			keys = Object.keys(sensors),
-			name, value;
+		let nameMax = 0;
+		let	valueMax = 0;
+		let keys = sensors.map(o => o.name);
+		let name, value;
 		
-		for (let i=0, len=keys.length; i<len; i+=1) {
-			let sensor = sensors[ keys[i] ],
-				nameLen = sensor.name.length,
-				valueLen = sensor.value.length;
+		sensors.forEach(sensor => {
+			let nameLen = sensor.name.length;
+			let valueLen = sensor.value.length;
 			
 			if (nameLen > nameMax) {
 				nameMax = nameLen;
-				name = keys[i];
+				name = sensor.name;
 			}
 			if (valueLen > valueMax) {
 				valueMax = valueLen;
-				value = keys[i];
+				value = sensor.value;
 			}
-		}
-		
+		});
+
 		return {name, value};
 	}
 	function createSensor(sensor, k, largestName, largestVal, wR1, wR2, add) {
@@ -333,6 +283,7 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 			   largestVal   ? r2.width : undefined;
 	}
 	function createSensors(sensors) {
+		debugger
 		let longest = getLongestText(sensors);
 		let lngName = longest.name;
 		let lngVal = longest.value;
@@ -341,11 +292,12 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 		let vW = createSensor(sensors[lngVal], lngVal, false, true);
 		
 		
-		Object.keys(sensors).forEach(k => {
+		sensors.forEach(o => {
 			let sensor = sensors[k];
 			if (sensor) {
 				createSensor( sensor, k, false, false, nW, vW, true );
 			}
+			createSensor( sensor, ""+o.id, false, false, nW, vW, true );
 		});
 		
 	}
@@ -531,7 +483,113 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 		return res;
 	}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	
+//	double request handling
+	const sensors_1 = [1228,1783,748,1258,533,1228,12,92,211,49,312,533,474];
+	const sensors_2 = [1633,1630,1602,1530,1465];
+	let rowList1;
+	let rowList2;
+	let mockData = {rowList: undefined, message: undefined};
+	let _init_ = false;
+	function base(table_name, sensors, done, fail) {
+		let d = {};
+
+		d.num_rows        = 1;
+		d.timestamp_start = getTimestamp();
+		d.timestamp_end   = getTimestamp(true);
+		d.table_name      = table_name;
+		d.sensors         = sensors.join(",");
+
+		$.ajax({
+			url: AJAX_URL,
+			type: "GET",
+			dataType: "json",
+			data: d
+		})
+		.done( done )
+		.fail( fail );
+	}
+	function req1() {
+		rowList1 = undefined;
+		base(
+			"csv_report",
+			sensors_1,
+			d => rowList1 = d.rowList,
+			() => setTimeout(req1, 200)
+		);
+	}
+	function req2() {
+		rowList2 = undefined;
+		base(
+			"report_1_hour",
+			sensors_2,
+			d => rowList2 = d.rowList,
+			() => setTimeout(req2, 200)
+		);
+	}
+	function ajax(data) {
+		if (!_init_) {
+			_init_ = true;
+			req1();
+			req2();
+		}
+		if (rowList1 && rowList2) {
+			mockData.rowList = rowList1.concat(rowList2);
+			data.done(mockData);
+		} else {
+			setTimeout(ajax, 200, data);
+		}
+	}
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	// unused
+	/*
+	function ajax(data) {
+		let d = {};
+		
+		d.num_rows        = 1;
+		d.timestamp_start = getTimestamp();
+		d.timestamp_end   = getTimestamp(true);
+		d.table_name      = "csv_report";
+		d.sensors = data.sensorsList ? data.sensorsList.join(",") : g.sensorsList.join(",")
+		
+		$.ajax({
+			url: AJAX_URL,
+			type: "GET",
+			dataType: "json",
+			data: d,
+			beforeSend: data.beforeSend
+		})
+		.done( data.done )
+		.fail( data.fail );
+	}	
+	*/
+	function makeInitAjax() {
+		if ( g.assetsLoaded ) {
+			let o = {};
+			o.done = function (data) {
+				g.initialAjaxLoaded = true;
+				debugger
+				let arr = data.rowList;
+				arr.forEach(itm => {
+					let sensor = sensorPos[itm.sensorId];
+					
+				//	sensor.name = itm.sensorName + " :";
+				//	sensor.name += " :";
+					sensor.value = ""+itm.value;
+				});
+				createSensors(sensorPos);
+				
+				setTimeout(loadData, REFRESH_TIME);
+			};
+			o.fail = function (data) {
+				setTimeout(makeInitAjax, FAIL_RETRY_TIME);
+			};
+			
+			ajax(o);
+		
+		} else {
+			setTimeout(makeInitAjax, NO_ASSETS_RETRY_TIME);
+		}
+	}
 	function start() {
 		let tile = new PIXI.extras.TilingSprite.fromImage(BG_PATH, g.renderer.width / g.renderer.resolution * 1000000, g.renderer.height / g.renderer.resolution *1000000);
 		tile.position.x = -1000000;
@@ -552,7 +610,7 @@ define(["core/config", "positions"], function (conf, sensorPos) {
 			g.main.addChild(s);
 		}
 	}
-	
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	inst.init = init;
 	inst.g = g;
 	window.map = inst;
