@@ -1,4 +1,4 @@
-define(['mediator', 'map', 'chart'], function (page, map, chart) {
+define(["mediator", "map/map", "chart"], function (page, map, chart) {
 	var inst = {};
 	
 	function init() {

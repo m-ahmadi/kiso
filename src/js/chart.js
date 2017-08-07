@@ -1,7 +1,7 @@
-define([], function () {
+define(["core/fn"], function (fn) {
 	let inst = {};
 	
-	const HOST = determineHost();
+	const HOST = fn.determineHost();
 	const AJAX_URL = `http://${HOST}/khp/report`; // "http://127.0.0.1:1081/khp/report";
 	const AMONIA = 14;
 	const UREA = 12;
@@ -16,18 +16,7 @@ define([], function () {
 		// "rgba(75, 192, 192, 0.4)"
 	};
 	
-	function determineHost() {
-		let hName = window.location.hostname;
-		let res;
-		if (hName) {	
-			if (hName === "localhost" || hName === "127.0.0.1") {
-				res = `${hName}:1081`;
-			} else if (host === "80.85.82.83" || hName === "10.10.200.64") {
-				res = `${hName}:8081`;
-			}
-		}
-		return res;
-	}
+	
 	function ajax(callback) {
 		let d = {};
 		let t = new Date();
