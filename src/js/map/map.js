@@ -1,11 +1,16 @@
-define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos) {
+define([
+	"core/config",
+	"core/fn",
+	"./positions"
+], function (
+	conf,
+	fn,
+	sensorPos
+) {
 	let inst = {};
 	
-	const ATLAS_PATH = conf.ROOT+ "images/atlas.json";
 	const PLANT_PATH = conf.ROOT+ "images/plant.png";
 	const TABLE_PATH = conf.ROOT+ "images/table.png";
-	const BG_PATH = conf.ROOT+ "images/bg.png";
-	
 	const REFRESH_TIME = 60000;
 	
 	const TXT_SCALE = 0.2;
@@ -14,20 +19,61 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 	const SCALE_Y = 1.4;
 	const SPACE_BETWEEN_BOXES = 8;
 	
-	// Scope globals prefixed with g. for better readablity:
-	let g = {
-		renderer: {},
-		stage: {},
-		main: {},
-		textures: {},
-		sensors: {},
-		initialAjaxLoaded: false,
-		assetsLoaded: false
-	};
-	
-	
-	
-	
+	function init(el) {
+		initMap(el);
+		
+	}
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//	basic pixi stuff
+	let renderer, stage, main;
+	let textures = {};
+	function initMap(canvasContainer) {
+		PIXI.utils.skipHello();
+		const loader = PIXI.loader;
+		renderer = PIXI.autoDetectRenderer(
+			window.innerWidth,
+			window.innerHeight,
+			{
+				backgroundColor: 0xffffff, // 0x4e342e, // 0xf5eed8, // 0xAB9988, // 0xAB9999,
+				antialias: false,
+				transparent: false
+			}
+		);
+		canvasContainer.append( renderer.view );
+		
+		stage = new PIXI.Container();
+		main = new PIXI.Container();
+		
+		const renReso = renderer.resolution;
+		main.hitArea = new PIXI.Rectangle(
+			-1000000,
+			-1000000,
+			renderer.width / renReso * 1000000,
+			renderer.height / renReso *1000000
+		);
+	//	stage.interactive = true;
+		makeDraggable(main);
+		addEvt();
+		stage.addChild( main );
+
+		loader.add( PLANT_PATH );
+		loader.add( TABLE_PATH );
+		loader.load(function () {
+			textures["plant"] = loader.resources[ PLANT_PATH ].texture;
+			textures["table"] = loader.resources[ TABLE_PATH ].texture;
+			createPlant();
+			createTable();
+			createSensorNames(sensorPos);
+		});
+		requestAnimationFrame( animate );
+		renderer.render( stage );
+	}
+	function addEvt() {
+		$("canvas").on("mousewheel", mousewheel);
+		$(window).on("resize", function () {
+			renderer.resize(window.innerWidth, window.innerHeight);
+		});
+	}
 	let makeDraggable = (function (el) {
 		function start(e) {
 			e.stopPropagation();
@@ -72,23 +118,17 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 	}());
 	function animate() {
 		requestAnimationFrame(animate);
-		g.renderer.render(g.stage);
+		renderer.render(stage);
 	}
 	function mousewheel(e) {
 		zoom(e.pageX, e.pageY, e.deltaY > 0);
-	}
-	function addEvt() {
-		$("canvas").on("mousewheel", mousewheel);
-		$(window).on("resize", function () {
-			g.renderer.resize(window.innerWidth, window.innerHeight);
-		});
 	}
 	function zoom(x, y, zoomIn) {
 		let direction = (zoomIn) ? 1 : -1,
 			factor = (1 + direction * 0.1),
 			local_pt = new PIXI.Point(),
 			point = new PIXI.Point(x, y),
-			el = g.stage;
+			el = stage;
 		
 		PIXI.interaction.InteractionData.prototype.getLocalPosition(el, local_pt, point);
 		
@@ -97,53 +137,20 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 		el.pivot = local_pt;
 		el.position = point;
 	}
-	
-	function init(el, fn) {
-		createSensors(sensorPos);
-		let Container = PIXI.Container;
-		let loader = PIXI.loader;
-		let div = el instanceof jQuery ? el    :
-				  u.isStr(el)          ? $(el) :
-				  $(document.body);
+	function createPlant() {
 		
-		PIXI.utils.skipHello();
-		g.renderer = PIXI.autoDetectRenderer(
-			window.innerWidth,
-			window.innerHeight,
-			{
-				backgroundColor: 0xffffff, // 0x4e342e, // 0xf5eed8, // 0xAB9988, // 0xAB9999,
-				antialias: false,
-				transparent: false
-			}
-		);
-		g.stage = new Container();
-		g.main = new Container();
+		let container = new PIXI.Container();
+		let sprite = new PIXI.Sprite( textures.plant );
 		
-		let renderer = g.renderer;
-		let stage = g.stage;
-		let main = g.main;
-		let renReso = renderer.resolution;
+		sprite.scale.set(0.5);
+		container.addChild(sprite);
 		
-		div.append( renderer.view );
-		
-		main.hitArea = new PIXI.Rectangle( -1000000, -1000000, renderer.width / renReso * 1000000, renderer.height / renReso *1000000 );
-	//	stage.interactive = true;
-		makeDraggable(main);
-		addEvt();
-		stage.addChild( main );
-
-		loader.add( PLANT_PATH );
-		loader.add( TABLE_PATH );
-		loader.load(function () {
-			g.textures["plant"] = loader.resources[ PLANT_PATH ].texture;
-			g.textures["table"] = loader.resources[ TABLE_PATH ].texture;
-			createPlant();
-			createTable();
-		});
-		requestAnimationFrame( animate );
-		renderer.render( stage );
+		main.addChild(container);
+		stage.scale.set(0.7);
+		stage.position.set(700, 15);
 	}
-	
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//	sensor stuff
 	function loadData() {
 		ajax({
 			done(data) {
@@ -155,21 +162,10 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 			}
 		});
 	}
-	function createPlant() {
-		let c = new PIXI.Container();
-		let s = new PIXI.Sprite( g.textures.plant );
-		
-		s.scale.set(0.5);
-		c.addChild(s);
-		
-		g.main.addChild(c);
-		g.stage.scale.set(0.7);
-		g.stage.position.set(700, 15);
-	}
+	
 	function getLongestText(sensors) {
 		let nameMax = 0;
 		let	valueMax = 0;
-		let keys = sensors.map(o => o.name);
 		let name, value;
 		
 		sensors.forEach(sensor => {
@@ -187,6 +183,15 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 		});
 
 		return {name, value};
+	}
+	function createSensorName() {
+		
+	}
+	function createSensorNames() {
+		const names = sensorPos.map(sensor => sensor.name);
+		names.forEach(() => {
+			createSensorName();
+		});
 	}
 	function createSensor(sensor, k, largestName, largestVal, wR1, wR2, add) {
 		let	Text = PIXI.Text;
@@ -238,8 +243,8 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 		b.addChild(t2);
 		
 		if (add) {
-			g.main.addChild(b);
-			g.sensors[k] = {
+			main.addChild(b);
+			sensors[k] = {
 				box: b,
 				nameRectEl: r1,
 				valueTxtEl: t2,
@@ -252,14 +257,12 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 			   largestVal   ? r2.width : undefined;
 	}
 	function createSensors(sensors) {
-		debugger
-		let longest = getLongestText(sensors);
-		let lngName = longest.name;
-		let lngVal = longest.value;
+		const longest = getLongestText(sensors);
+		const lngName = longest.name;
+		const lngVal = longest.value;
 		
-		let nW = createSensor(sensors[lngName], lngName, true);
-		let vW = createSensor(sensors[lngVal], lngVal, false, true);
-		
+		const nW = createSensor(sensors[lngName], lngName, true);
+		const vW = createSensor(sensors[lngVal], lngVal, false, true);
 		
 		sensors.forEach(o => {
 			let sensor = sensors[k];
@@ -268,18 +271,16 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 			}
 			createSensor( sensor, ""+o.id, false, false, nW, vW, true );
 		});
-		
 	}
+	
 	function updateSensors(arr) {
 		arr.forEach((itm, idx) => {
 			let sensor = g.sensors[ itm.sensorId ];
 			sensor.valueTxtEl.setText(""+itm.value);
 		});
 	}
-	
-	
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-// table stuff
+//	table stuff
 	/* var x = [
 		[0, 1, 2, 3, 4, 5, 6, 7],
 		[0, 1, 2, 3, 4, 5, 6, 7],
@@ -316,16 +317,16 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 		});
 	}
 	function createTable() {
-		let s = new PIXI.Sprite( g.textures.table );
+		let s = new PIXI.Sprite( textures.table );
 		
 		s.position.set(200, 920);
 		s.scale.set(0.5);
-		g.main.addChild(s);
+		main.addChild(s);
 		
 		texts = makeTexts();
 		
 		texts.forEach(a => {
-			a.forEach( o => g.main.addChild(o) );
+			a.forEach( o => main.addChild(o) );
 		});
 		
 		loadTableData();
@@ -452,7 +453,7 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 		return res;
 	}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//	request handling (double)
+//	double request handling
 	const HOST = fn.determineHost();
 	const AJAX_URL = `http://${HOST}/khp/report`; // "http://127.0.0.1:1081/khp/report"
 	const AJAX_URL_2 = `http://${HOST}/khp/dashboard`; // http://127.0.0.1:1081/khp/dashboard
@@ -517,59 +518,8 @@ define(["core/config", "core/fn", "./positions"], function (conf, fn, sensorPos)
 			setTimeout(ajax, 200, data);
 		}
 	}
-
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	
+	inst.init = init;
 	return inst;
 });
-
-
-/* function makeTexts() {
-	let a, b, c, d, date;
-	const f1 = 135;
-	const f2 = 118;
-	const lf = f1 + 740;
-	const X = 1155;
-	const X2 = 880;
-	const Y1 = 1135;
-	const Y2 = 1177;
-	const Y3 = 1219;
-	const Y4 = 1272;
-	a = [
-		mkTxt(X,           Y1),
-		mkTxt(X  - f1,     Y1),
-		mkTxt(X  - (f1*2), Y1),
-		mkTxt(X2 - f2,     Y1),
-		mkTxt(X2 - (f2*2), Y1),
-		mkTxt(X2 - (f2*3), Y1),
-		mkTxt(X2 - (f2*4), Y1),
-		mkTxt(X  - lf,     Y1)
-	];
-	b = [
-		mkTxt(X,           Y2),
-		mkTxt(X  - f1,     Y2),
-		mkTxt(X  - (f1*2), Y2),
-		mkTxt(X2 - f2,     Y2),
-		mkTxt(X2 - (f2*2), Y2),
-		mkTxt(X2 - (f2*3), Y2),
-		mkTxt(X2 - (f2*4), Y2),
-		mkTxt(X  - lf,     Y2)
-	];
-	c = [
-		mkTxt(X,           Y3),
-		mkTxt(X  - f1,     Y3),
-		mkTxt(X  - (f1*2), Y3),
-		mkTxt(X2 - f2,     Y3),
-		mkTxt(X2 - (f2*2), Y3),
-		mkTxt(X2 - (f2*3), Y3),
-		mkTxt(X2 - (f2*4), Y3),
-		mkTxt(X  - lf,     Y3)
-	];
-	d = [
-		mkTxt(X,           Y4),
-		mkTxt(X  - f1,     Y4),
-		mkTxt(X  - (f1*2), Y4)
-	];
-	date = [
-		mkTxt(1200, 986, "90px")
-	];
-	return [a, b, c, d, date];
-} */
