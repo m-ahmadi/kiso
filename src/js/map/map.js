@@ -25,7 +25,7 @@ define([
 	}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //	basic pixi stuff
-	let renderer, stage, main;
+	let renderer, stage, main, sensContainer;
 	let textures = {};
 	function initMap(canvasContainer) {
 		PIXI.utils.skipHello();
@@ -35,7 +35,7 @@ define([
 			window.innerHeight,
 			{
 				backgroundColor: 0xffffff, // 0x4e342e, // 0xf5eed8, // 0xAB9988, // 0xAB9999,
-				antialias: false,
+				antialias: true,
 				transparent: false
 			}
 		);
@@ -43,6 +43,7 @@ define([
 		
 		stage = new PIXI.Container();
 		main = new PIXI.Container();
+		sensContainer = new PIXI.Container();
 		
 		const renReso = renderer.resolution;
 		main.hitArea = new PIXI.Rectangle(
@@ -54,6 +55,7 @@ define([
 	//	stage.interactive = true;
 		makeDraggable(main);
 		addEvt();
+		main.addChild( sensContainer );
 		stage.addChild( main );
 
 		loader.add( PLANT_PATH );
@@ -63,10 +65,15 @@ define([
 			textures["table"] = loader.resources[ TABLE_PATH ].texture;
 			createPlant();
 			createTable();
-			createSensorNames(sensorPos);
+			createSensors(sensorPos);
+			loadData();
 		});
 		requestAnimationFrame( animate );
 		renderer.render( stage );
+		
+		window.stage = stage;
+		window.main = main;
+		
 	}
 	function addEvt() {
 		$("canvas").on("mousewheel", mousewheel);
@@ -138,7 +145,6 @@ define([
 		el.position = point;
 	}
 	function createPlant() {
-		
 		let container = new PIXI.Container();
 		let sprite = new PIXI.Sprite( textures.plant );
 		
@@ -148,9 +154,33 @@ define([
 		main.addChild(container);
 		stage.scale.set(0.7);
 		stage.position.set(700, 15);
+		
+		// stage.x = -1500;
+		// stage.scale.set(2.5);
 	}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //	sensor stuff
+	let longestTextEl;
+	let sens = [];
+	const txtConf = {
+		fontFamily: "Arial",
+		fontSize: "100px",
+		fontWeight: "bold",
+		fill: "#002200", // 002200
+		stroke: "#4a1850"
+	};
+	function getLongestName(names) {
+		let longest = 0;
+		let res;
+		names.forEach(name => {
+			const len = name.length;
+			if (len > longest) {
+				longest = len;
+				res = name;
+			}
+		});
+		return res;
+	}
 	function loadData() {
 		ajax({
 			done(data) {
@@ -162,122 +192,64 @@ define([
 			}
 		});
 	}
-	
-	function getLongestText(sensors) {
-		let nameMax = 0;
-		let	valueMax = 0;
-		let name, value;
+	function createSensor(sensor) {
+		const txt = new PIXI.Text(sensor.name +" "+ sensor.value, txtConf);
+		txt.scale.set( TXT_SCALE );
+		console.log(sensor.name +" "+ sensor.value);
+		const rect = new PIXI.Graphics();
+		rect.beginFill( BOX_COLOR );
+		rect.drawRect(
+			0,
+			0,
+			200 * SCALE_X,
+			longestTextEl.height * SCALE_Y
+		);
+		rect.endFill();
 		
-		sensors.forEach(sensor => {
-			let nameLen = sensor.name.length;
-			let valueLen = sensor.value.length;
-			
-			if (nameLen > nameMax) {
-				nameMax = nameLen;
-				name = sensor.name;
-			}
-			if (valueLen > valueMax) {
-				valueMax = valueLen;
-				value = sensor.value;
-			}
-		});
-
-		return {name, value};
-	}
-	function createSensorName() {
+		txt.position.x += (rect.width - txt.width) /10;
+		txt.position.y += (rect.height - txt.height) /2;
 		
-	}
-	function createSensorNames() {
-		const names = sensorPos.map(sensor => sensor.name);
-		names.forEach(() => {
-			createSensorName();
-		});
-	}
-	function createSensor(sensor, k, largestName, largestVal, wR1, wR2, add) {
-		let	Text = PIXI.Text;
-		let Graphics = PIXI.Graphics;
-		let ts1 = {
-			fontFamily: 'Arial',
-			fontSize: '100px',
-			fontWeight : 'bold',
-			fill: '#002200', // 002200
-			stroke: '#4a1850'
-		};
-		let ts2 = {
-			fontFamily: 'Arial',
-			fontSize: '100px',
-			fontWeight : 'bold',
-			fill: '#002200', // F7EDCA
-			stroke: '#4a1850'
-		};
-		
-		let b = new PIXI.Container();
-		
-		let t1 = new Text(""+sensor.name, ts1);
-		t1.scale.set( TXT_SCALE );
-		
-		let t2 = new Text(""+sensor.value, ts2);
-		t2.scale.set( TXT_SCALE );
-		
-		let r1 = new Graphics();
-		r1.beginFill( BOX_COLOR );
-		r1.drawRect(0, 0, wR1 ? wR1 : t1.width * SCALE_X, t1.height * SCALE_Y);
-		r1.endFill();
-		
-		let r2 = new Graphics();
-		r2.beginFill( BOX_COLOR );
-		r2.drawRect(0, 0, wR2 ? wR2 : t2.width * SCALE_X*1.3, t2.height * SCALE_Y);
-		r2.endFill();
-		r2.position.x = r1.x + r1.width + SPACE_BETWEEN_BOXES;
-		
-		t1.position.x += (r1.width - t1.width) /2;
-		t1.position.y += (r1.height - t1.height) /2;
-		t2.position.x = r2.x + (r2.width - t2.width) /2;
-		t2.position.y = r2.y + (r2.height - t2.height) /2;
-		
+		const b = new PIXI.Container();
 		b.position.set(sensor.x, sensor.y);
+		b.addChild(rect);
+		b.addChild(txt);
 		
-		b.addChild(r1);
-		b.addChild(r2);
-		b.addChild(t1);
-		b.addChild(t2);
-		
-		if (add) {
-			main.addChild(b);
-			sensors[k] = {
-				box: b,
-				nameRectEl: r1,
-				valueTxtEl: t2,
-				valueRectEl: r2
-			};
-		}
-		
-		
-		return largestName ? r1.width :
-			   largestVal   ? r2.width : undefined;
+		return b;
 	}
 	function createSensors(sensors) {
-		const longest = getLongestText(sensors);
-		const lngName = longest.name;
-		const lngVal = longest.value;
+		if (sens.length) sens.forEach( i => i.destroy(true) );
+		sens = [];
+		const names = sensorPos.map(sensor => sensor.name);
+		const name = getLongestName(names);
 		
-		const nW = createSensor(sensors[lngName], lngName, true);
-		const vW = createSensor(sensors[lngVal], lngVal, false, true);
+		longestTextEl = new PIXI.Text(name, txtConf);
+		longestTextEl.scale.set( TXT_SCALE );
 		
-		sensors.forEach(o => {
-			let sensor = sensors[k];
-			if (sensor) {
-				createSensor( sensor, k, false, false, nW, vW, true );
-			}
-			createSensor( sensor, ""+o.id, false, false, nW, vW, true );
+		sensors.forEach(sensor => {
+			const el = createSensor(sensor);
+			sensContainer.addChild(el);
+			sens.push(el);
 		});
 	}
 	
 	function updateSensors(arr) {
-		arr.forEach((itm, idx) => {
-			let sensor = g.sensors[ itm.sensorId ];
-			sensor.valueTxtEl.setText(""+itm.value);
-		});
+		const vals = {};
+		if (arr.length) {
+			arr.forEach(i => {
+				vals[i.sensorName] = i.value;
+			});
+		}
+		
+		if ( !u.isEmptyObj(vals) ) {
+			sensorPos.forEach(i => {
+				i.value = vals[i.name];
+			});
+		} else {
+			sensorPos.forEach(i => {
+				i.value = "---";
+			});
+		}
+		createSensors(sensorPos);
 	}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //	table stuff
