@@ -195,7 +195,7 @@ define([
 	function createSensor(sensor) {
 		const txt = new PIXI.Text(sensor.name +" "+ sensor.value, txtConf);
 		txt.scale.set( TXT_SCALE );
-		console.log(sensor.name +" "+ sensor.value);
+		
 		const rect = new PIXI.Graphics();
 		rect.beginFill( BOX_COLOR );
 		rect.drawRect(
