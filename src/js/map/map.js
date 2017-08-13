@@ -85,7 +85,7 @@ define([
 		function start(e) {
 			e.stopPropagation();
 			this.data = e.data;
-			this.alpha = 0.9;
+			this.alpha = 1;
 			this.dragging = true;
 			this.dragPoint = e.data.getLocalPosition(this.parent);
 			this.dragPoint.x -= this.position.x;
@@ -239,16 +239,14 @@ define([
 				vals[i.sensorName] = i.value;
 			});
 		}
-		
-		if ( !u.isEmptyObj(vals) ) {
-			sensorPos.forEach(i => {
-				i.value = vals[i.name];
-			});
-		} else {
-			sensorPos.forEach(i => {
+		sensorPos.forEach(i => {
+			const k = i.name.trim().slice(0, -1);
+			if ( vals[k] ) {
+				i.value = vals[k];
+			} else {
 				i.value = "---";
-			});
-		}
+			}
+		});
 		createSensors(sensorPos);
 	}
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
