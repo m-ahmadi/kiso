@@ -431,7 +431,7 @@ define([
 		let ts = Math.floor( Date.now() );
 		return now
 			? ts
-			: ts - (96 * 3600);
+			: ts - (24 * 3600);
 	}
 	const sensors_1 = [1228,1783,748,1258,533,1228,12,92,211,49,312,533,474];
 	const sensors_2 = [1633,1630,1602,1530,1465];
