@@ -61,14 +61,14 @@ define(["core/fn"], function (fn) {
 		});
 		
 		let newData = {};
-		newData["urea ("+UREA+")"] = data.urea;
-		newData["amonia ("+AMONIA+")"] = data.amonia;
-		newData["melamin ("+MELAMIN+")"] = data.melamin;
+		newData["Urea (2FR1042)"] = data.urea;
+		newData["Amonia (2TI1029)"] = data.amonia;
+		newData["Melamin (2FC1003_MV)"] = data.melamin;
 		
+		console.log(labelArr);
 		g.chart.data.labels = labelArr;
 		g.chart.data.datasets.forEach(o => {
-			
-			o.data = newData[ o.label.toLowerCase() ];
+			o.data = newData[ o.label ];
 		});
 		g.chart.update();
 	}
@@ -88,19 +88,19 @@ define(["core/fn"], function (fn) {
 		let data = {
 			labels: [],
 			datasets: [{
-				label: "Amonia ("+AMONIA+")",
+				label: "Amonia (2TI1029)",
 				lineTension: 0,
 		//		data: data.amonia,
 				fill: false,
 				borderColor: "#ff558f"
 			}, {
-				label: "Urea ("+UREA+")",
+				label: "Urea (2FR1042)",
 				lineTension: 0,
 		//		data: data.urea,
 				fill: false,
 				borderColor: "#00daff"
 			}, {
-				label: "Melamin ("+MELAMIN+")",
+				label: "Melamin (2FC1003_MV)",
 				lineTension: 0,
 		//		data: data.melamin,
 				fill: false,
